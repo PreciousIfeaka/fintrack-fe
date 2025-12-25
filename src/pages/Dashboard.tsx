@@ -21,7 +21,7 @@ export default function Dashboard() {
               <Wallet className="w-7 h-7 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground mb-3">FinanceTracker</h1>
+          <h1 className="text-3xl font-semibold text-foreground mb-3">FinTrack</h1>
           <p className="text-muted-foreground mb-8 max-w-sm">
             Take control of your finances with our simple and powerful tracking tools.
           </p>
@@ -47,7 +47,7 @@ export default function Dashboard() {
             <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
               <Wallet className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-foreground">FinanceTracker</span>
+            <span className="font-semibold text-foreground">FinTrack</span>
           </div>
           
           <div className="flex items-center gap-4">

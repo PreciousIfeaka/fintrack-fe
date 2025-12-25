@@ -143,6 +143,11 @@ export default function Login() {
           {errors.password && (
             <p className="text-sm text-destructive mt-1.5">{errors.password}</p>
           )}
+          <div className="text-right mt-1">
+            <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>

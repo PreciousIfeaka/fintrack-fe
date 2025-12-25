@@ -118,6 +118,44 @@ export const api = {
 
     return handleResponse<AuthResponse>(response);
   },
+
+  async forgotPassword(email: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/forgot-password?email=${encodeURIComponent(email)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return handleResponse<void>(response);
+  },
+
+  async resetPassword(otp: string, password: string, confirmPassword: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/reset-password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otp,
+        password,
+        confirmPassword,
+      }),
+    });
+
+    return handleResponse<void>(response);
+  },
+
+  async resendOtp(email: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/forgot-password?email=${encodeURIComponent(email)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return handleResponse<void>(response);
+  },
 };
 
 export { ApiError };

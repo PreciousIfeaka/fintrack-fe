@@ -1,20 +1,40 @@
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wallet, LogOut, User } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { Button } from '@/components/ui/button';
+import { Wallet, TrendingUp, TrendingDown, PiggyBank, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function Dashboard() {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [stats, setStats] = useState({ income: 0, expenses: 0, budget: 0 });
+  const [loading, setLoading] = useState(true);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchStats = async () => {
+        try {
+          const [incomeData, expenseData, budgetData] = await Promise.all([
+            api.getIncomesByMonth(1, 1),
+            api.getExpensesByMonth(1, 1),
+            api.getBudgetsByMonth(1, 1),
+          ]);
+          setStats({
+            income: incomeData.totalIncome || 0,
+            expenses: expenseData.totalExpenses || 0,
+            budget: budgetData.totalBudget || 0,
+          });
+        } catch { /* ignore */ } finally { setLoading(false); }
+      };
+      fetchStats();
+    }
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
         <div className="text-center animate-fade-in">
           <div className="flex items-center justify-center gap-2 mb-8">
             <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
@@ -26,71 +46,39 @@ export default function Dashboard() {
             Take control of your finances with our simple and powerful tracking tools.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button onClick={() => navigate('/login')} variant="outline" size="lg">
-              Sign in
-            </Button>
-            <Button onClick={() => navigate('/register')} size="lg">
-              Create account
-            </Button>
+            <Button onClick={() => navigate('/login')} variant="outline" size="lg">Sign in</Button>
+            <Button onClick={() => navigate('/register')} size="lg">Create account</Button>
           </div>
         </div>
       </div>
     );
   }
 
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-foreground">FinTrack</span>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="w-4 h-4" />
-              <span>{user?.name}</span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="animate-fade-in">
-          <h1 className="text-2xl font-semibold text-foreground mb-2">
-            Welcome back, {user?.name?.split(' ')[0]}!
-          </h1>
-          <p className="text-muted-foreground mb-8">
-            Here's your financial overview.
-          </p>
-
-          {/* Placeholder content */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-6">
-                <div className="h-4 w-24 bg-muted rounded mb-3" />
-                <div className="h-8 w-32 bg-muted rounded mb-2" />
-                <div className="h-3 w-20 bg-muted rounded" />
+    <DashboardLayout title={`Welcome back, ${user?.name?.split(' ')[0]}!`} description="Here's your financial overview.">
+      {loading ? (
+        <div className="flex items-center justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[
+            { label: 'Total Budget', value: stats.budget, icon: PiggyBank, color: 'text-primary' },
+            { label: 'Income', value: stats.income, icon: TrendingUp, color: 'text-success' },
+            { label: 'Expenses', value: stats.expenses, icon: TrendingDown, color: 'text-destructive' },
+          ].map((item, i) => (
+            <div key={i} className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+                  <item.icon className={`w-4 h-4 ${item.color}`} />
+                </div>
+                <span className="text-sm font-medium text-muted-foreground">{item.label}</span>
               </div>
-            ))}
-          </div>
-
-          <div className="mt-8 p-6 bg-accent/50 border border-border rounded-xl text-center">
-            <p className="text-muted-foreground">
-              Dashboard content coming soon. Add more API endpoints to build out this page.
-            </p>
-          </div>
+              <div className={`text-2xl font-bold ${item.color}`}>{formatCurrency(item.value)}</div>
+            </div>
+          ))}
         </div>
-      </main>
-    </div>
+      )}
+    </DashboardLayout>
   );
 }

@@ -1,0 +1,38 @@
+# Query: finance_tracker
+# ContextLines: 1
+
+9 results - 4 files
+
+src/contexts/AuthContext.tsx:
+  14  
+  15: const TOKEN_KEY = 'fintrack_token';
+  16: const USER_KEY = 'fintrack_user';
+  17  
+
+src/contexts/ThemeContext.tsx:
+  11  
+  12: const THEME_KEY = 'fintrack_theme';
+  13  
+
+src/lib/api.ts:
+   70      if (response.status === 401) {
+   71:       localStorage.removeItem('fintrack_token');
+   72:       localStorage.removeItem('fintrack_user');
+   73        window.location.href = '/login';
+
+   93  function getAuthHeaders(): HeadersInit {
+   94:   const token = localStorage.getItem('fintrack_token');
+   95    return {
+
+  396    async uploadAvatar(file: File): Promise<{ fileUrl: string }> {
+  397:     const token = localStorage.getItem('fintrack_token');
+  398      const formData = new FormData();
+
+src/pages/Settings.tsx:
+  113        // Update local auth context
+  114:       const token = localStorage.getItem('fintrack_token');
+  115        if (token && response) {
+
+  146        // Update local auth context with new user data
+  147:       const token = localStorage.getItem('fintrack_token');
+  148        if (token && response) {

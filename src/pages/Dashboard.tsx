@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Wallet, TrendingUp, TrendingDown, PiggyBank, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { Currency } from '@/lib/types';
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -54,7 +55,18 @@ export default function Dashboard() {
     );
   }
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  const userCurrency = (user?.currency as Currency) ?? 'NGN';
+  const locale = userCurrency == 'NGN'
+    ? 'en-NG'
+    : 'en-US';
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: userCurrency,
+      currencyDisplay: 'symbol'
+    }).format(amount);
+  };
 
   return (
     <DashboardLayout title={`Welcome back, ${user?.name?.split(' ')[0]}!`} description="Here's your financial overview.">

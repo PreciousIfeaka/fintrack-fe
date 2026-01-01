@@ -27,6 +27,7 @@ interface DashboardLayoutProps {
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Transactions', path: '/transactions', icon: TrendingUp },
   { label: 'Budgets', path: '/budgets', icon: PiggyBank },
   { label: 'Income', path: '/income', icon: TrendingUp },
   { label: 'Expenses', path: '/expenses', icon: TrendingDown },
@@ -60,7 +61,7 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
               <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
                 <Wallet className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-foreground hidden sm:inline">FinTrack</span>
+              <span className="font-semibold text-foreground hidden sm:inline">FinanceTracker</span>
             </div>
           </div>
 

@@ -17,6 +17,11 @@ import {
   UpdateProfileRequest,
   ChangePasswordRequest,
   PagedUserResponse,
+  TransactionDirection,
+  PagedTransactionResponse,
+  Transaction,
+  UpdateTransactionRequest,
+  MonthlyTransactionStats,
 } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
@@ -407,6 +412,55 @@ export const api = {
     });
 
     return handleResponse<{ fileUrl: string }>(response);
+  },
+  async getTransactions(
+    page = 1,
+    limit = 10,
+    month?: string,
+    direction?: TransactionDirection
+  ): Promise<PagedTransactionResponse> {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (month) params.append('date', month);
+    if (direction) params.append('direction', direction);
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/transactions?${params}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<PagedTransactionResponse>(response);
+  },
+
+  async getTransaction(id: string): Promise<Transaction> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${id}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<Transaction>(response);
+  },
+
+  async updateTransaction(id: string, data: UpdateTransactionRequest): Promise<Transaction> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Transaction>(response);
+  },
+
+  async deleteTransaction(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<void>(response);
+  },
+
+  async getMonthlyTransactionTotals(): Promise<MonthlyTransactionStats[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/transactions/monthly-totals`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<MonthlyTransactionStats[]>(response);
   },
 };
 

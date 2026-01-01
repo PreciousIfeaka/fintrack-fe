@@ -142,6 +142,39 @@ export interface MonthlyExpenseStats {
   total: number;
 }
 
+// Transaction Types
+export type TransactionDirection = 'credit' | 'debit';
+
+export interface Transaction {
+  id: string;
+  amount: number;
+  month: string;
+  direction: TransactionDirection;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface PagedTransactionResponse {
+  balance: number;
+  transactions: Transaction[];
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface UpdateTransactionRequest {
+  amount?: number;
+  direction?: TransactionDirection;
+  description?: string;
+}
+
+export interface MonthlyTransactionStats {
+  month: string;
+  total: number;
+}
+
 // Currency enum
 export type Currency = 'USD' | 'EUR' | 'GBP' | 'NGN' | 'JPY' | 'CAD' | 'AUD';
 

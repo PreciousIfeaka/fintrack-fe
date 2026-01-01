@@ -17,6 +17,7 @@ import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Transactions from "./pages/Transactions";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/transactions" element={<Transactions />} />
               <Route path="/budgets" element={<Budgets />} />
               <Route path="/income" element={<Income />} />
               <Route path="/expenses" element={<Expenses />} />

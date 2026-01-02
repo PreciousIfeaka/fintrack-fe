@@ -3,17 +3,18 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
-import { 
-  Wallet, 
-  LogOut, 
-  LayoutDashboard, 
-  PiggyBank, 
-  TrendingUp, 
+import {
+  Wallet,
+  LogOut,
+  LayoutDashboard,
+  PiggyBank,
+  TrendingUp,
   TrendingDown,
   Sun,
   Moon,
   Menu,
-  X
+  X,
+  User
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState } from 'react';
@@ -61,7 +62,7 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
               <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
                 <Wallet className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-foreground hidden sm:inline">FinanceTracker</span>
+              <span className="font-semibold text-foreground hidden sm:inline">FinTrack</span>
             </div>
           </div>
 
@@ -85,22 +86,41 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-lg">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-lg shrink-0"
+              aria-label="Toggle theme"
+            >
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </Button>
-            <button
+
+            {/* Desktop Profile access - hidden on mobile since it's in the menu */}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => navigate('/settings')}
-              className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground px-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
+              className="rounded-lg shrink-0 hidden sm:inline-flex"
+              aria-label="Profile settings"
             >
-              <Avatar className="w-6 h-6">
+              <Avatar className="w-7 h-7">
                 <AvatarImage src={user?.avatarUrl || undefined} alt={user?.name} />
                 <AvatarFallback className="text-xs">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
+            </Button>
+
+            {/* Desktop: show name next to avatar */}
+            <button
+              onClick={() => navigate('/settings')}
+              className="hidden md:flex items-center gap-2 text-sm text-muted-foreground px-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
+            >
               <span className="max-w-[120px] truncate">{user?.name}</span>
             </button>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
+
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2 shrink-0">
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Logout</span>
             </Button>
@@ -129,6 +149,22 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
                   {item.label}
                 </Button>
               ))}
+              {/* Profile link for mobile */}
+              <Button
+                variant={location.pathname === '/settings' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => {
+                  navigate('/settings');
+                  setMobileMenuOpen(false);
+                }}
+                className={cn(
+                  'justify-start gap-2',
+                  location.pathname === '/settings' && 'bg-accent text-accent-foreground'
+                )}
+              >
+                <User className="w-4 h-4" />
+                Profile Settings
+              </Button>
             </div>
           </nav>
         )}

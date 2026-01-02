@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Transaction, TransactionDirection } from '@/lib/types';
+import { Currency, Transaction, TransactionDirection } from '@/lib/types';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -62,6 +63,7 @@ export function TransactionList({
   onRefresh,
 }: TransactionListProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -75,8 +77,18 @@ export function TransactionList({
 
   const totalPages = Math.ceil(total / limit);
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  const userCurrency = (user?.currency as Currency) ?? 'NGN';
+  const locale = userCurrency == 'NGN'
+    ? 'en-NG'
+    : 'en-US';
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: userCurrency,
+      currencyDisplay: 'symbol'
+    }).format(amount);
+  };
 
   const formatDate = (dateString: string) => {
     try {

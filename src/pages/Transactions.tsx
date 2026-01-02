@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { TransactionList } from '@/components/TransactionList';
 import { api } from '@/lib/api';
-import { Transaction, TransactionDirection, MonthlyTransactionStats } from '@/lib/types';
+import { Transaction, TransactionDirection, MonthlyTransactionStats, Currency } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ import { Filter, X, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Transactions() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -38,6 +38,12 @@ export default function Transactions() {
   // Monthly totals
   const [monthlyTotals, setMonthlyTotals] = useState<MonthlyTransactionStats[]>([]);
   const [loadingTotals, setLoadingTotals] = useState(true);
+
+  const formatMonth = (monthString: string) => {
+    const [year, month] = monthString.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return format(date, 'MMM, yyyy');
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -98,8 +104,18 @@ export default function Transactions() {
     setPage(1);
   };
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  const userCurrency = (user?.currency as Currency) ?? 'NGN';
+  const locale = userCurrency == 'NGN'
+    ? 'en-NG'
+    : 'en-US';
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: userCurrency,
+      currencyDisplay: 'symbol'
+    }).format(amount);
+  };
 
   const hasActiveFilters = monthFilter || directionFilter !== 'all';
 
@@ -222,9 +238,3 @@ export default function Transactions() {
     </DashboardLayout>
   );
 }
-
-const formatMonth = (monthString: string) => {
-  const [year, month] = monthString.split('-');
-  const date = new Date(parseInt(year), parseInt(month) - 1);
-  return format(date, 'MMM, yyyy');
-};

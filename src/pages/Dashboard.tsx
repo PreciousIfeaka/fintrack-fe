@@ -75,11 +75,15 @@ export default function Dashboard() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[
-            { label: 'Total Budget', value: stats.budget, icon: PiggyBank, color: 'text-primary' },
-            { label: 'Income', value: stats.income, icon: TrendingUp, color: 'text-success' },
-            { label: 'Expenses', value: stats.expenses, icon: TrendingDown, color: 'text-destructive' },
+            { label: 'Total Budget', value: stats.budget, icon: PiggyBank, color: 'text-primary', path: '/budgets' },
+            { label: 'Income', value: stats.income, icon: TrendingUp, color: 'text-success', path: '/income' },
+            { label: 'Expenses', value: stats.expenses, icon: TrendingDown, color: 'text-destructive', path: '/expenses' },
           ].map((item, i) => (
-            <div key={i} className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div
+              key={i}
+              onClick={() => navigate(item.path)}
+              className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer hover:border-primary/50"
+            >
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
                   <item.icon className={`w-4 h-4 ${item.color}`} />

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, lastApiMessage } from '@/lib/api';
 import { AuthLayout } from '@/components/AuthLayout';
 import { Lock, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
 import { z } from 'zod';
@@ -83,7 +83,7 @@ export default function ResetPassword() {
       await api.resendOtp(email);
       toast({
         title: 'OTP Resent',
-        description: 'A new code has been sent to your email.',
+        description: lastApiMessage || 'A new code has been sent to your email.',
       });
     } catch (error) {
       toast({
@@ -120,7 +120,7 @@ export default function ResetPassword() {
       await api.resetPassword(otpString, password, confirmPassword);
       toast({
         title: 'Password Reset Successful',
-        description: 'You can now login with your new password.',
+        description: lastApiMessage || 'You can now login with your new password.',
       });
       navigate('/login');
     } catch (error) {

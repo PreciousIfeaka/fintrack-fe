@@ -1,5 +1,5 @@
 // Expense Categories from backend
-export type ExpenseCategory = 
+export type ExpenseCategory =
   | 'food'
   | 'clothing'
   | 'entertainment'
@@ -10,6 +10,10 @@ export type ExpenseCategory =
   | 'housing'
   | 'transportation'
   | 'personal'
+  | 'bill'
+  | 'tax'
+  | 'grooming'
+  | 'gifting'
   | 'all'
   | 'miscellaneous'
 
@@ -24,6 +28,10 @@ export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
   { value: 'housing', label: 'Housing' },
   { value: 'personal', label: 'Personal' },
   { value: 'miscellaneous', label: 'Misc.' },
+  { value: 'grooming', label: 'Grooming' },
+  { value: 'gifting', label: 'Gifting' },
+  { value: 'tax', label: 'Tax' },
+  { value: 'bill', label: 'Bill' },
   { value: 'all', label: 'All' }
 ];
 
@@ -32,7 +40,7 @@ export interface Budget {
   id: string;
   amount: number;
   category: ExpenseCategory;
-  month: string; // YearMonth format "2024-01"
+  month: string;
   isExceeded: boolean | null;
   isRecurring: boolean;
   createdAt: string;
@@ -72,6 +80,7 @@ export interface Income {
   note: string | null;
   isRecurring: boolean;
   month: string;
+  transactionDateTime: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -81,6 +90,7 @@ export interface CreateIncomeRequest {
   source: string;
   isRecurring: boolean;
   note?: string;
+  transactionDateTime?: string;
 }
 
 export interface UpdateIncomeRequest {
@@ -88,6 +98,7 @@ export interface UpdateIncomeRequest {
   source?: string;
   isRecurring?: boolean;
   note?: string;
+  transactionDateTime?: string;
 }
 
 export interface PagedIncomeResponse {
@@ -111,6 +122,7 @@ export interface Expense {
   note: string | null;
   isRecurring: boolean;
   month: string;
+  transactionDateTime: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -120,6 +132,7 @@ export interface CreateExpenseRequest {
   category: ExpenseCategory;
   isRecurring: boolean;
   note?: string;
+  transactionDateTime?: string;
 }
 
 export interface UpdateExpenseRequest {
@@ -127,6 +140,7 @@ export interface UpdateExpenseRequest {
   category?: ExpenseCategory;
   isRecurring?: boolean;
   note?: string;
+  transactionDateTime?: string;
 }
 
 export interface PagedExpenseResponse {
@@ -151,6 +165,7 @@ export interface Transaction {
   month: string;
   direction: TransactionDirection;
   description: string;
+  transactionDateTime: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -168,6 +183,7 @@ export interface UpdateTransactionRequest {
   amount?: number;
   direction?: TransactionDirection;
   description?: string;
+  transactionDateTime?: string;
 }
 
 export interface MonthlyTransactionStats {
@@ -226,3 +242,38 @@ export interface PagedUserResponse {
   limit: number;
   total: number;
 }
+
+// Bank Statement Types
+export interface DocumentUrls {
+  url: string;
+  mimeType: string;
+}
+
+export interface BankStatement {
+  id: string;
+  documentUrls: DocumentUrls[];
+  originalFilename: string;
+  month: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'ANALYSED';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateStatementRequest {
+  month: string;
+  documentUrls: DocumentUrls[];
+}
+
+export interface UpdateStatementRequest {
+  documentUrls?: DocumentUrls[];
+  month?: string;
+  deleteDocuments?: DocumentUrls[];
+}
+
+export interface PagedBankStatementResponse {
+  statements: BankStatement[];
+  page: number;
+  limit: number;
+  total: number;
+}
+

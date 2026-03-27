@@ -3,19 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MonthPicker } from '@/components/ui/month-picker';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, lastApiMessage } from '@/lib/api';
 import { Budget, Currency, CURRENCY_LOCALE_MAP, EXPENSE_CATEGORIES, ExpenseCategory } from '@/lib/types';
-import { 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  ChevronLeft, 
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  ChevronLeft,
   ChevronRight,
   AlertCircle,
   RefreshCw,
-  Loader2
+  Loader2,
+  AlertTriangle,
+  ShieldCheck
 } from 'lucide-react';
 import {
   Dialog,
@@ -122,14 +125,14 @@ export default function Budgets() {
           category,
           isRecurring,
         });
-        toast({ title: 'Success', description: 'Budget updated successfully' });
+        toast({ title: 'Success', description: lastApiMessage || 'Budget updated successfully' });
       } else {
         await api.createBudget({
           amount: parseFloat(amount),
           category,
           isRecurring,
         });
-        toast({ title: 'Success', description: 'Budget created successfully' });
+        toast({ title: 'Success', description: lastApiMessage || 'Budget created successfully' });
       }
       setDialogOpen(false);
       fetchBudgets();
@@ -148,7 +151,7 @@ export default function Budgets() {
     try {
       setSubmitting(true);
       await api.deleteBudget(deletingBudget.id);
-      toast({ title: 'Success', description: 'Budget deleted successfully' });
+      toast({ title: 'Success', description: lastApiMessage || 'Budget deleted successfully' });
       setDeleteDialogOpen(false);
       setDeletingBudget(null);
       fetchBudgets();
@@ -183,14 +186,12 @@ export default function Budgets() {
       {/* Top Actions */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
         <div className="flex items-center gap-3">
-          <Input
-            type="month"
+          <MonthPicker
             value={selectedMonth}
-            onChange={(e) => {
-              setSelectedMonth(e.target.value);
+            onChange={(val) => {
+              setSelectedMonth(val);
               setPage(1);
             }}
-            className="w-auto"
           />
           <Button variant="outline" size="icon" onClick={fetchBudgets}>
             <RefreshCw className="w-4 h-4" />
@@ -207,6 +208,31 @@ export default function Budgets() {
         <div className="text-sm font-medium text-muted-foreground mb-1">Total Budget for {selectedMonth}</div>
         <div className="text-3xl font-bold text-foreground">{formatCurrency(totalBudget)}</div>
       </div>
+
+      {/* Budget Limit Indicator */}
+      {user?.isLimitExceeded !== null && user?.isLimitExceeded !== undefined && (
+        <div className={`flex items-center gap-3 p-4 mb-6 rounded-xl border ${
+          user.isLimitExceeded
+            ? 'bg-destructive/10 border-destructive/30 text-destructive'
+            : 'bg-success/10 border-success/30 text-success'
+        }`}>
+          {user.isLimitExceeded ? (
+            <AlertTriangle className="w-5 h-5 shrink-0" />
+          ) : (
+            <ShieldCheck className="w-5 h-5 shrink-0" />
+          )}
+          <div>
+            <p className="font-semibold text-sm">
+              {user.isLimitExceeded ? 'Budget Limit Exceeded' : 'Within Budget Limit'}
+            </p>
+            <p className="text-xs opacity-80">
+              {user.isLimitExceeded
+                ? 'Your overall spending has exceeded your budget limit. Consider reviewing your expenses.'
+                : 'Your spending is within your set budget limit. Keep it up!'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Budgets List */}
       {loading ? (

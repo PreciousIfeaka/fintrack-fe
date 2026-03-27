@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, lastApiMessage } from '@/lib/api';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 const registerSchema = z.object({
@@ -72,7 +72,7 @@ export default function Register() {
 
       toast({
         title: 'Registration successful',
-        description: 'Please check your email for the verification code.',
+        description: lastApiMessage || 'Please check your email for the verification code.',
       });
 
       // Navigate to OTP verification with email

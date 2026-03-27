@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Currency, Transaction, TransactionDirection } from '@/lib/types';
-import { api } from '@/lib/api';
+import { api, lastApiMessage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -125,7 +125,7 @@ export function TransactionList({
         direction: editDirection,
         description: editDescription,
       });
-      toast({ title: 'Success', description: 'Transaction updated successfully' });
+      toast({ title: 'Success', description: lastApiMessage || 'Transaction updated successfully' });
       setEditDialogOpen(false);
       onRefresh();
     } catch {
@@ -145,7 +145,7 @@ export function TransactionList({
     setIsSubmitting(true);
     try {
       await api.deleteTransaction(selectedTransaction.id);
-      toast({ title: 'Success', description: 'Transaction deleted successfully' });
+      toast({ title: 'Success', description: lastApiMessage || 'Transaction deleted successfully' });
       setDeleteDialogOpen(false);
       onRefresh();
     } catch {
@@ -182,24 +182,24 @@ export function TransactionList({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-center">Date</TableHead>
+                  <TableHead className="text-center">Amount</TableHead>
+                  <TableHead className="text-center">Type</TableHead>
+                  <TableHead className="text-center">Description</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {transactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="font-medium max-w-[200px] truncate">
-                      {transaction.description}
+                  <TableRow key={transaction.id} className="cursor-pointer hover:bg-muted/30" onClick={() => handleView(transaction)}>
+                    <TableCell className="text-muted-foreground text-sm whitespace-nowrap text-center">
+                      {formatDate(transaction.transactionDateTime || transaction.createdAt)}
                     </TableCell>
-                    <TableCell className={transaction.direction === 'credit' ? 'text-success' : 'text-destructive'}>
+                    <TableCell className={`whitespace-nowrap text-center ${transaction.direction === 'credit' ? 'text-success' : 'text-destructive'}`}>
                       {transaction.direction === 'credit' ? '+' : '-'}
                       {formatCurrency(transaction.amount)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <Badge variant={transaction.direction === 'credit' ? 'default' : 'secondary'} className="gap-1">
                         {transaction.direction === 'credit' ? (
                           <ArrowDownLeft className="w-3 h-3" />
@@ -209,14 +209,11 @@ export function TransactionList({
                         {transaction.direction}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {formatDate(transaction.createdAt)}
+                    <TableCell className="font-medium max-w-[200px] truncate text-left">
+                      {transaction.description}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleView(transaction)}>
-                          <Eye className="w-4 h-4" />
-                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => handleEditOpen(transaction)}>
                           <Pencil className="w-4 h-4" />
                         </Button>

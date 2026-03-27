@@ -14,7 +14,8 @@ import {
   Moon,
   Menu,
   X,
-  User
+  User,
+  FileText
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState } from 'react';
@@ -32,6 +33,7 @@ const navItems = [
   { label: 'Budgets', path: '/budgets', icon: PiggyBank },
   { label: 'Income', path: '/income', icon: TrendingUp },
   { label: 'Expenses', path: '/expenses', icon: TrendingDown },
+  { label: 'Statements', path: '/bank-statements', icon: FileText },
 ];
 
 export function DashboardLayout({ children, title, description }: DashboardLayoutProps) {

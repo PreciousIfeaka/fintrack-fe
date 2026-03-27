@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, lastApiMessage } from '@/lib/api';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -22,7 +22,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -61,12 +61,31 @@ export default function Login() {
 
       toast({
         title: 'Welcome back!',
-        description: 'You have been successfully logged in.',
+        description: lastApiMessage || 'You have been successfully logged in.',
       });
 
       navigate('/');
     } catch (error) {
       if (error instanceof ApiError) {
+        if (error.message === 'User is not verified') {
+          try {
+            await api.resendOtp(formData.email);
+            toast({
+              title: 'Verification Required',
+              description: 'A new verification code has been sent to your email.',
+            });
+          } catch (resendError) {
+            toast({
+              title: 'Verification Required',
+              description: 'Please verify your email to log in.',
+            });
+          } finally {
+            setIsLoading(false);
+            navigate('/verify-otp', { state: { email: formData.email } });
+          }
+          return;
+        }
+
         if (error.validationErrors) {
           const fieldErrors: Record<string, string> = {};
           error.validationErrors.forEach((err) => {

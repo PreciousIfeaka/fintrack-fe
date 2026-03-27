@@ -1,22 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MonthPicker } from '@/components/ui/month-picker';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, lastApiMessage } from '@/lib/api';
 import { Currency, CURRENCY_LOCALE_MAP, Income } from '@/lib/types';
-import { 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  ChevronLeft, 
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  ChevronLeft,
   ChevronRight,
   AlertCircle,
   RefreshCw,
   Loader2,
-  TrendingUp
+  TrendingUp,
+  Search,
 } from 'lucide-react';
 import {
   Dialog,
@@ -38,6 +40,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialogue'
 import { useAuth } from '@/contexts/AuthContext';
+import { format } from 'date-fns';
 
 export default function IncomePage() {
   const { toast } = useToast();
@@ -52,12 +55,15 @@ export default function IncomePage() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [filterSource, setFilterSource] = useState('');
 
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [deletingIncome, setDeletingIncome] = useState<Income | null>(null);
+  const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Form state
@@ -65,6 +71,7 @@ export default function IncomePage() {
   const [source, setSource] = useState('');
   const [note, setNote] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
+  const [transactionDateTime, setTransactionDateTime] = useState('');
 
   const fetchIncomes = async () => {
     try {
@@ -86,12 +93,21 @@ export default function IncomePage() {
     fetchIncomes();
   }, [page, selectedMonth]);
 
+  // Frontend source filter
+  const filteredIncomes = useMemo(() => {
+    if (!filterSource.trim()) return incomes;
+    return incomes.filter(i =>
+      i.source.toLowerCase().includes(filterSource.toLowerCase())
+    );
+  }, [incomes, filterSource]);
+
   const openCreateDialog = () => {
     setEditingIncome(null);
     setAmount('');
     setSource('');
     setNote('');
     setIsRecurring(false);
+    setTransactionDateTime('');
     setDialogOpen(true);
   };
 
@@ -101,6 +117,7 @@ export default function IncomePage() {
     setSource(income.source);
     setNote(income.note || '');
     setIsRecurring(income.isRecurring);
+    setTransactionDateTime(income.transactionDateTime ? income.transactionDateTime.slice(0, 16) : '');
     setDialogOpen(true);
   };
 
@@ -122,16 +139,18 @@ export default function IncomePage() {
           source: source.trim(),
           note: note.trim() || undefined,
           isRecurring,
+          transactionDateTime: transactionDateTime || undefined,
         });
-        toast({ title: 'Success', description: 'Income updated successfully' });
+        toast({ title: 'Success', description: lastApiMessage || 'Income updated successfully' });
       } else {
         await api.createIncome({
           amount: parseFloat(amount),
           source: source.trim(),
           note: note.trim() || undefined,
           isRecurring,
+          transactionDateTime: transactionDateTime || undefined,
         });
-        toast({ title: 'Success', description: 'Income added successfully' });
+        toast({ title: 'Success', description: lastApiMessage || 'Income added successfully' });
       }
       setDialogOpen(false);
       fetchIncomes();
@@ -150,7 +169,7 @@ export default function IncomePage() {
     try {
       setSubmitting(true);
       await api.deleteIncome(deletingIncome.id);
-      toast({ title: 'Success', description: 'Income deleted successfully' });
+      toast({ title: 'Success', description: lastApiMessage || 'Income deleted successfully' });
       setDeleteDialogOpen(false);
       setDeletingIncome(null);
       fetchIncomes();
@@ -161,6 +180,11 @@ export default function IncomePage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleRowClick = (income: Income) => {
+    setViewingIncome(income);
+    setDetailsDialogOpen(true);
   };
 
   const userCurrency = (user?.currency as Currency) ?? 'NGN';
@@ -176,20 +200,35 @@ export default function IncomePage() {
     }).format(amount);
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+    } catch {
+      return dateString || '-';
+    }
+  };
+
   return (
     <DashboardLayout title="Income" description="Track your income sources">
       {/* Top Actions */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Input
-            type="month"
+        <div className="flex items-center gap-3 flex-wrap">
+          <MonthPicker
             value={selectedMonth}
-            onChange={(e) => {
-              setSelectedMonth(e.target.value);
+            onChange={(val) => {
+              setSelectedMonth(val);
               setPage(1);
             }}
-            className="w-auto"
           />
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Filter by source..."
+              value={filterSource}
+              onChange={(e) => setFilterSource(e.target.value)}
+              className="pl-8 w-[180px]"
+            />
+          </div>
           <Button variant="outline" size="icon" onClick={fetchIncomes}>
             <RefreshCw className="w-4 h-4" />
           </Button>
@@ -214,15 +253,19 @@ export default function IncomePage() {
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
-      ) : incomes.length === 0 ? (
+      ) : filteredIncomes.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">No income records found</h3>
-          <p className="text-muted-foreground mb-4">Start tracking your income by adding your first entry.</p>
-          <Button onClick={openCreateDialog} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Income
-          </Button>
+          <p className="text-muted-foreground mb-4">
+            {filterSource ? 'No records match your filter.' : 'Start tracking your income by adding your first entry.'}
+          </p>
+          {!filterSource && (
+            <Button onClick={openCreateDialog} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Income
+            </Button>
+          )}
         </div>
       ) : (
         <>
@@ -231,22 +274,30 @@ export default function IncomePage() {
               <table className="w-full">
                 <thead className="bg-muted/50 border-b border-border">
                   <tr>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Source</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Amount</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground hidden sm:table-cell">Note</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground hidden md:table-cell">Type</th>
-                    <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">Actions</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground">Source</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground">Amount</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground hidden sm:table-cell">Date</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground hidden md:table-cell">Note</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground hidden lg:table-cell">Type</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {incomes.map((income) => (
-                    <tr key={income.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 text-foreground font-medium">{income.source}</td>
-                      <td className="px-4 py-3 text-success font-semibold">{formatCurrency(income.amount)}</td>
-                      <td className="px-4 py-3 text-muted-foreground text-sm hidden sm:table-cell">
+                  {filteredIncomes.map((income) => (
+                    <tr
+                      key={income.id}
+                      className="hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => handleRowClick(income)}
+                    >
+                      <td className="px-4 py-3 text-foreground font-medium text-center">{income.source}</td>
+                      <td className="px-4 py-3 text-success font-semibold whitespace-nowrap text-center">{formatCurrency(income.amount)}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-sm hidden sm:table-cell whitespace-nowrap text-center">
+                        {formatDate(income.transactionDateTime)}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground text-sm hidden md:table-cell max-w-[150px] truncate text-center">
                         {income.note || '-'}
                       </td>
-                      <td className="px-4 py-3 hidden md:table-cell">
+                      <td className="px-4 py-3 hidden lg:table-cell text-center">
                         {income.isRecurring ? (
                           <span className="px-2 py-1 bg-accent text-accent-foreground text-xs rounded-full">
                             Recurring
@@ -257,7 +308,7 @@ export default function IncomePage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(income)}>
                             <Pencil className="w-4 h-4" />
@@ -342,6 +393,15 @@ export default function IncomePage() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="transactionDate">Transaction Date</Label>
+              <Input
+                id="transactionDate"
+                type="datetime-local"
+                value={transactionDateTime}
+                onChange={(e) => setTransactionDateTime(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="note">Note (optional)</Label>
               <Textarea
                 id="note"
@@ -369,6 +429,49 @@ export default function IncomePage() {
               {editingIncome ? 'Update' : 'Add'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Income Details</DialogTitle>
+          </DialogHeader>
+          {viewingIncome && (
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Source</p>
+                  <p className="font-medium">{viewingIncome.source}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Amount</p>
+                  <p className="font-semibold text-success">{formatCurrency(viewingIncome.amount)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Transaction Date</p>
+                  <p className="text-sm">{formatDate(viewingIncome.transactionDateTime)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Type</p>
+                  <p className="text-sm">{viewingIncome.isRecurring ? 'Recurring' : 'One-time'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm text-muted-foreground">Note</p>
+                  <p className="text-sm">{viewingIncome.note || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Created</p>
+                  <p className="text-sm">{formatDate(viewingIncome.createdAt)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Updated</p>
+                  <p className="text-sm">{formatDate(viewingIncome.updatedAt)}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

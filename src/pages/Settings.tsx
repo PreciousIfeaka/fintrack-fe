@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { api } from '@/lib/api';
+import { api, lastApiMessage } from '@/lib/api';
 import { CURRENCIES, Currency, UpdateProfileRequest, ChangePasswordRequest } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -118,7 +118,7 @@ export default function Settings() {
 
       toast({
         title: 'Avatar updated',
-        description: 'Your profile picture has been updated successfully.',
+        description: lastApiMessage || 'Your profile picture has been updated successfully.',
       });
     } catch (error) {
       toast({
@@ -151,7 +151,7 @@ export default function Settings() {
 
       toast({
         title: 'Profile updated',
-        description: 'Your profile has been updated successfully.',
+        description: lastApiMessage || 'Your profile has been updated successfully.',
       });
     } catch (error) {
       toast({
@@ -175,7 +175,7 @@ export default function Settings() {
       
       toast({
         title: 'Password changed',
-        description: 'Your password has been changed successfully.',
+        description: lastApiMessage || 'Your password has been changed successfully.',
       });
       passwordForm.reset();
     } catch (error) {
@@ -198,7 +198,7 @@ export default function Settings() {
       
       toast({
         title: 'Account deleted',
-        description: 'Your account has been deleted successfully.',
+        description: lastApiMessage || 'Your account has been deleted successfully.',
       });
       
       logout();

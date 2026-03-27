@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { Transaction, TransactionDirection, MonthlyTransactionStats, Currency } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MonthPicker } from '@/components/ui/month-picker';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -188,15 +189,13 @@ export default function Transactions() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="month-filter">Month</Label>
-                  <Input
+                  <MonthPicker
                     id="month-filter"
-                    type="month"
                     value={monthFilter}
-                    onChange={(e) => {
-                      setMonthFilter(e.target.value);
+                    onChange={(val) => {
+                      setMonthFilter(val);
                       setPage(1);
                     }}
-                    placeholder="Select month"
                   />
                 </div>
                 <div className="space-y-2">

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, lastApiMessage } from '@/lib/api';
 import { AuthLayout } from '@/components/AuthLayout';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { z } from 'zod';
@@ -42,7 +42,7 @@ export default function ForgotPassword() {
       await api.forgotPassword(email);
       toast({
         title: 'OTP Sent',
-        description: 'Check your email for the password reset code.',
+        description: lastApiMessage || 'Check your email for the password reset code.',
       });
       navigate('/reset-password', { state: { email } });
     } catch (error) {

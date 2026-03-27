@@ -22,9 +22,13 @@ import {
   Transaction,
   UpdateTransactionRequest,
   MonthlyTransactionStats,
+  BankStatement,
+  CreateStatementRequest,
+  UpdateStatementRequest,
+  PagedBankStatementResponse,
 } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface ApiResponse<T> {
   status: 'Success' | 'Failed';
@@ -45,6 +49,7 @@ export interface UserResponse {
   currency: string | null;
   role: string;
   avatarUrl: string | null;
+  isLimitExceeded: boolean | null;
   createdAt: string;
   updatedAt: string;
   verified: boolean;
@@ -66,6 +71,8 @@ class ApiError extends Error {
     this.validationErrors = validationErrors;
   }
 }
+
+export let lastApiMessage = '';
 
 async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json();
@@ -92,6 +99,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
     );
   }
 
+  lastApiMessage = data.message || '';
   return data.data;
 }
 
@@ -159,7 +167,7 @@ export const api = {
   },
 
   async resendOtp(email: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/auth/forgot-password?email=${encodeURIComponent(email)}`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/resend-otp?email=${encodeURIComponent(email)}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -196,8 +204,8 @@ export const api = {
 
   async getBudgetsByMonth(page = 1, limit = 10, month?: string): Promise<PagedBudgetResponse> {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-    if (month) params.append('date', month);
-    
+    if (month) params.append('month', month);
+
     const response = await fetch(`${API_BASE_URL}/api/v1/budgets/month?${params}`, {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -258,8 +266,8 @@ export const api = {
 
   async getIncomesByMonth(page = 1, limit = 10, month?: string): Promise<PagedIncomeResponse> {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-    if (month) params.append('date', month);
-    
+    if (month) params.append('month', month);
+
     const response = await fetch(`${API_BASE_URL}/api/v1/incomes/month?${params}`, {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -318,10 +326,11 @@ export const api = {
     return handleResponse<Expense>(response);
   },
 
-  async getExpensesByMonth(page = 1, limit = 10, month?: string): Promise<PagedExpenseResponse> {
+  async getExpensesByMonth(page = 1, limit = 10, month?: string, category?: string): Promise<PagedExpenseResponse> {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-    if (month) params.append('date', month);
-    
+    if (month) params.append('month', month);
+    if (category && category !== 'all') params.append('category', category);
+
     const response = await fetch(`${API_BASE_URL}/api/v1/expenses/month?${params}`, {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -371,7 +380,6 @@ export const api = {
   },
 
   async updateProfile(data: UpdateProfileRequest): Promise<UserResponse> {
-    console.log(API_BASE_URL);
     const response = await fetch(`${API_BASE_URL}/api/v1/users/update-profile`, {
       method: 'PUT',
       headers: getAuthHeaders(),
@@ -397,13 +405,12 @@ export const api = {
     return handleResponse<void>(response);
   },
 
-  // Upload endpoints
-  async uploadAvatar(file: File): Promise<{ fileUrl: string }> {
+  async uploadAvatar(file: File): Promise<{ fileUrl: string; mimeType: string }> {
     const token = localStorage.getItem('finance_tracker_token');
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE_URL}/api/v1/uploads`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/uploads/avatar`, {
       method: 'POST',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` }),
@@ -411,7 +418,23 @@ export const api = {
       body: formData,
     });
 
-    return handleResponse<{ fileUrl: string }>(response);
+    return handleResponse<{ fileUrl: string; mimeType: string }>(response);
+  },
+
+  async uploadDocument(file: File): Promise<{ fileUrl: string; mimeType: string }> {
+    const token = localStorage.getItem('finance_tracker_token');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/uploads/docs`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    return handleResponse<{ fileUrl: string; mimeType: string }>(response);
   },
   async getTransactions(
     page = 1,
@@ -420,7 +443,7 @@ export const api = {
     direction?: TransactionDirection
   ): Promise<PagedTransactionResponse> {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-    if (month) params.append('date', month);
+    if (month) params.append('month', month);
     if (direction) params.append('direction', direction);
 
     const response = await fetch(`${API_BASE_URL}/api/v1/transactions?${params}`, {
@@ -461,6 +484,57 @@ export const api = {
       headers: getAuthHeaders(),
     });
     return handleResponse<MonthlyTransactionStats[]>(response);
+  },
+
+  // Bank Statement endpoints
+  async createStatement(data: CreateStatementRequest): Promise<BankStatement> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/bank-statements`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse<BankStatement>(response);
+  },
+
+  async updateStatement(id: string, data: UpdateStatementRequest): Promise<BankStatement> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/bank-statements/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse<BankStatement>(response);
+  },
+
+  async getStatement(id: string): Promise<BankStatement> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/bank-statements/${id}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<BankStatement>(response);
+  },
+
+  async getAllStatements(page = 1, limit = 10): Promise<PagedBankStatementResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/bank-statements?page=${page}&limit=${limit}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<PagedBankStatementResponse>(response);
+  },
+
+  async deleteStatement(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/bank-statements/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<void>(response);
+  },
+
+  async analyseBankStatements(id: string): Promise<BankStatement> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/bank-statements/${id}/analyse`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<BankStatement>(response);
   },
 };
 

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, lastApiMessage } from '@/lib/api';
 import { Loader2, ArrowLeft } from 'lucide-react';
 
 export default function VerifyOtp() {
@@ -14,6 +14,7 @@ export default function VerifyOtp() {
   const { toast } = useToast();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -87,7 +88,7 @@ export default function VerifyOtp() {
 
       toast({
         title: 'Email verified',
-        description: 'Welcome to FinTrack!',
+        description: lastApiMessage || 'Welcome to FinTrack!',
       });
 
       navigate('/');
@@ -104,6 +105,26 @@ export default function VerifyOtp() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!email) return;
+    setIsResending(true);
+    try {
+      await api.resendOtp(email);
+      toast({
+        title: 'OTP Resent',
+        description: lastApiMessage || 'A new verification code has been sent to your email.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof ApiError ? error.message : 'Failed to resend OTP.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -148,6 +169,17 @@ export default function VerifyOtp() {
             'Verify email'
           )}
         </Button>
+
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={handleResendOtp}
+            disabled={isResending || !email}
+            className="text-sm text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+          >
+            {isResending ? 'Resending...' : "Didn't receive a code? Resend"}
+          </button>
+        </div>
 
         <div className="text-center">
           <Link

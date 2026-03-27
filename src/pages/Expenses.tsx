@@ -2,16 +2,17 @@ import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MonthPicker } from '@/components/ui/month-picker';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, lastApiMessage } from '@/lib/api';
 import { Currency, Expense, EXPENSE_CATEGORIES, ExpenseCategory } from '@/lib/types';
-import { 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  ChevronLeft, 
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  ChevronLeft,
   ChevronRight,
   AlertCircle,
   RefreshCw,
@@ -45,6 +46,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialogue';
 import { useAuth } from '@/contexts/AuthContext';
+import { format } from 'date-fns';
 
 export default function Expenses() {
   const { toast } = useToast();
@@ -59,12 +61,15 @@ export default function Expenses() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [filterCategory, setFilterCategory] = useState<string>('all');
 
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deletingExpense, setDeletingExpense] = useState<Expense | null>(null);
+  const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Form state
@@ -72,11 +77,12 @@ export default function Expenses() {
   const [category, setCategory] = useState<ExpenseCategory>('all');
   const [note, setNote] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
+  const [transactionDateTime, setTransactionDateTime] = useState('');
 
   const fetchExpenses = async () => {
     try {
       setLoading(true);
-      const data = await api.getExpensesByMonth(page, 10, selectedMonth);
+      const data = await api.getExpensesByMonth(page, 10, selectedMonth, filterCategory);
       setExpenses(data.expenses);
       setTotalPages(Math.ceil(data.total / data.limit));
       setTotalExpense(data.totalExpenses ?? 0);
@@ -91,7 +97,7 @@ export default function Expenses() {
 
   useEffect(() => {
     fetchExpenses();
-  }, [page, selectedMonth]);
+  }, [page, selectedMonth, filterCategory]);
 
   const openCreateDialog = () => {
     setEditingExpense(null);
@@ -99,6 +105,7 @@ export default function Expenses() {
     setCategory('all');
     setNote('');
     setIsRecurring(false);
+    setTransactionDateTime('');
     setDialogOpen(true);
   };
 
@@ -108,6 +115,7 @@ export default function Expenses() {
     setCategory(expense.category);
     setNote(expense.note || '');
     setIsRecurring(expense.isRecurring);
+    setTransactionDateTime(expense.transactionDateTime ? expense.transactionDateTime.slice(0, 16) : '');
     setDialogOpen(true);
   };
 
@@ -125,16 +133,18 @@ export default function Expenses() {
           category,
           note: note.trim() || undefined,
           isRecurring,
+          transactionDateTime: transactionDateTime || undefined,
         });
-        toast({ title: 'Success', description: 'Expense updated successfully' });
+        toast({ title: 'Success', description: lastApiMessage || 'Expense updated successfully' });
       } else {
         await api.createExpense({
           amount: parseFloat(amount),
           category,
           note: note.trim() || undefined,
           isRecurring,
+          transactionDateTime: transactionDateTime || undefined,
         });
-        toast({ title: 'Success', description: 'Expense added successfully' });
+        toast({ title: 'Success', description: lastApiMessage || 'Expense added successfully' });
       }
       setDialogOpen(false);
       fetchExpenses();
@@ -153,7 +163,7 @@ export default function Expenses() {
     try {
       setSubmitting(true);
       await api.deleteExpense(deletingExpense.id);
-      toast({ title: 'Success', description: 'Expense deleted successfully' });
+      toast({ title: 'Success', description: lastApiMessage || 'Expense deleted successfully' });
       setDeleteDialogOpen(false);
       setDeletingExpense(null);
       fetchExpenses();
@@ -163,6 +173,18 @@ export default function Expenses() {
       }
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleRowClick = async (expense: Expense) => {
+    try {
+      const data = await api.getExpense(expense.id);
+      setViewingExpense(data);
+      setDetailsDialogOpen(true);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      }
     }
   };
 
@@ -183,20 +205,38 @@ export default function Expenses() {
     }).format(amount);
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+    } catch {
+      return dateString || '-';
+    }
+  };
+
   return (
     <DashboardLayout title="Expenses" description="Track your spending">
       {/* Top Actions */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Input
-            type="month"
+        <div className="flex items-center gap-3 flex-wrap">
+          <MonthPicker
             value={selectedMonth}
-            onChange={(e) => {
-              setSelectedMonth(e.target.value);
+            onChange={(val) => {
+              setSelectedMonth(val);
               setPage(1);
             }}
-            className="w-auto"
           />
+          <Select value={filterCategory} onValueChange={(val) => { setFilterCategory(val); setPage(1); }}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {EXPENSE_CATEGORIES.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button variant="outline" size="icon" onClick={fetchExpenses}>
             <RefreshCw className="w-4 h-4" />
           </Button>
@@ -211,7 +251,7 @@ export default function Expenses() {
       <div className="bg-card border border-border rounded-xl p-6 mb-6 shadow-sm">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
           <TrendingDown className="w-4 h-4 text-destructive" />
-          Total Expenses for {selectedMonth}
+          Total Expenses for {selectedMonth}{filterCategory !== 'all' ? ` (${getCategoryLabel(filterCategory as ExpenseCategory)})` : ''}
         </div>
         <div className="text-3xl font-bold text-destructive">{formatCurrency(totalExpense)}</div>
       </div>
@@ -238,28 +278,36 @@ export default function Expenses() {
               <table className="w-full">
                 <thead className="bg-muted/50 border-b border-border">
                   <tr>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Category</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Amount</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground hidden sm:table-cell">Note</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground hidden md:table-cell">Type</th>
-                    <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">Actions</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground">Category</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground">Amount</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground hidden sm:table-cell">Date</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground hidden md:table-cell">Note</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground hidden lg:table-cell">Type</th>
+                    <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {expenses.map((expense) => (
-                    <tr key={expense.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3">
+                    <tr
+                      key={expense.id}
+                      className="hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => handleRowClick(expense)}
+                    >
+                      <td className="px-4 py-3 text-center">
                         <span className="px-2 py-1 bg-accent text-accent-foreground text-xs rounded-full">
                           {getCategoryLabel(expense.category)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-destructive font-semibold">
+                      <td className="px-4 py-3 text-destructive font-semibold whitespace-nowrap text-center">
                         -{formatCurrency(expense.amount)}
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground text-sm hidden sm:table-cell">
+                      <td className="px-4 py-3 text-muted-foreground text-sm hidden sm:table-cell whitespace-nowrap text-center">
+                        {formatDate(expense.transactionDateTime)}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground text-sm hidden md:table-cell max-w-[150px] truncate text-center">
                         {expense.note || '-'}
                       </td>
-                      <td className="px-4 py-3 hidden md:table-cell">
+                      <td className="px-4 py-3 hidden lg:table-cell text-center">
                         {expense.isRecurring ? (
                           <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
                             Recurring
@@ -270,7 +318,7 @@ export default function Expenses() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(expense)}>
                             <Pencil className="w-4 h-4" />
@@ -340,7 +388,7 @@ export default function Expenses() {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {EXPENSE_CATEGORIES.map((cat) => (
+                  {EXPENSE_CATEGORIES.filter(c => c.value !== 'all').map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.label}
                     </SelectItem>
@@ -358,6 +406,15 @@ export default function Expenses() {
                 onChange={(e) => setAmount(e.target.value)}
                 min="0"
                 step="0.01"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="transactionDate">Transaction Date</Label>
+              <Input
+                id="transactionDate"
+                type="datetime-local"
+                value={transactionDateTime}
+                onChange={(e) => setTransactionDateTime(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -388,6 +445,51 @@ export default function Expenses() {
               {editingExpense ? 'Update' : 'Add'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Expense Details</DialogTitle>
+          </DialogHeader>
+          {viewingExpense && (
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Category</p>
+                  <span className="px-2 py-1 bg-accent text-accent-foreground text-xs rounded-full">
+                    {getCategoryLabel(viewingExpense.category)}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Amount</p>
+                  <p className="font-semibold text-destructive">-{formatCurrency(viewingExpense.amount)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Transaction Date</p>
+                  <p className="text-sm">{formatDate(viewingExpense.transactionDateTime)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Type</p>
+                  <p className="text-sm">{viewingExpense.isRecurring ? 'Recurring' : 'One-time'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm text-muted-foreground">Note</p>
+                  <p className="text-sm">{viewingExpense.note || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Created</p>
+                  <p className="text-sm">{formatDate(viewingExpense.createdAt)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Updated</p>
+                  <p className="text-sm">{formatDate(viewingExpense.updatedAt)}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

@@ -106,7 +106,7 @@ export default function Settings() {
       
       // Update profile with new avatar URL
       const updateData: UpdateProfileRequest = {
-        avatarUrl: uploadResponse.fileUrl,
+        avatarUrl: uploadResponse.fileKey,
       };
       const response = await api.updateProfile(updateData);
       

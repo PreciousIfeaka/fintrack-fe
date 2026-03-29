@@ -245,7 +245,7 @@ export interface PagedUserResponse {
 
 // Bank Statement Types
 export interface DocumentUrls {
-  url: string;
+  fileKey: string;
   mimeType: string;
 }
 
@@ -275,5 +275,22 @@ export interface PagedBankStatementResponse {
   page: number;
   limit: number;
   total: number;
+}
+
+// Summary Types
+export interface WeeklyTotal {
+  weekName: string;
+  income: number;
+  expense: number;
+  budget: number;
+}
+
+export interface CurrentMonthSummary {
+  totalIncome: number;
+  incomePercentageChange: number;
+  totalExpense: number;
+  expensePercentageChange: number;
+  totalBudget: number;
+  budgetPercentageChange: number;
 }
 

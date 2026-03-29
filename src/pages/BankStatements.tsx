@@ -134,7 +134,7 @@ export default function BankStatementsPage() {
 
       setIsUploading(false);
 
-      const newDocs: DocumentUrls[] = uploadedDocs.map(doc => ({ url: doc.fileUrl, mimeType: doc.mimeType }));
+      const newDocs: DocumentUrls[] = uploadedDocs.map(doc => ({ fileKey: doc.fileKey, mimeType: doc.mimeType }));
 
       if (editingStatement) {
         await api.updateStatement(editingStatement.id, {
@@ -365,7 +365,7 @@ export default function BankStatementsPage() {
                 <Label>Existing Documents</Label>
                 <div className="flex flex-col gap-2">
                   {existingDocs.map((doc, idx) => {
-                    const fileName = doc.url.split('/').pop() || doc.url;
+                    const fileName = doc.fileKey.split('/').pop() || doc.fileKey;
                     const ext = fileName.split('.').pop()?.toUpperCase() || 'FILE';
                     return (
                       <div key={idx} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
@@ -373,7 +373,7 @@ export default function BankStatementsPage() {
                           Document {idx + 1} ({ext})
                         </span>
                         <Button variant="ghost" size="icon" className="shrink-0" onClick={() => {
-                          setExistingDocs(prev => prev.filter(d => d.url !== doc.url));
+                          setExistingDocs(prev => prev.filter(d => d.fileKey !== doc.fileKey));
                           setDeletedDocs(prev => [...prev, doc]);
                         }}>
                           <X className="w-4 h-4 text-destructive" />
@@ -477,12 +477,12 @@ export default function BankStatementsPage() {
                 </p>
                 <div className="flex flex-col gap-2">
                   {viewingStatement.documentUrls.map((doc, idx) => {
-                    const fileName = doc.url.split('/').pop() || doc.url;
+                    const fileName = doc.fileKey.split('/').pop() || doc.fileKey;
                     const ext = fileName.split('.').pop()?.toUpperCase() || 'FILE';
                     return (
                       <a
                         key={idx}
-                        href={doc.url}
+                        href={doc.fileKey}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 bg-muted/50 p-2 rounded-md hover:bg-muted transition-colors text-sm"

@@ -26,6 +26,8 @@ import {
   CreateStatementRequest,
   UpdateStatementRequest,
   PagedBankStatementResponse,
+  WeeklyTotal,
+  CurrentMonthSummary,
 } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -405,7 +407,7 @@ export const api = {
     return handleResponse<void>(response);
   },
 
-  async uploadAvatar(file: File): Promise<{ fileUrl: string; mimeType: string }> {
+  async uploadAvatar(file: File): Promise<{ fileKey: string; mimeType: string }> {
     const token = localStorage.getItem('finance_tracker_token');
     const formData = new FormData();
     formData.append('file', file);
@@ -418,10 +420,10 @@ export const api = {
       body: formData,
     });
 
-    return handleResponse<{ fileUrl: string; mimeType: string }>(response);
+    return handleResponse<{ fileKey: string; mimeType: string }>(response);
   },
 
-  async uploadDocument(file: File): Promise<{ fileUrl: string; mimeType: string }> {
+  async uploadDocument(file: File): Promise<{ fileKey: string; mimeType: string }> {
     const token = localStorage.getItem('finance_tracker_token');
     const formData = new FormData();
     formData.append('file', file);
@@ -434,7 +436,7 @@ export const api = {
       body: formData,
     });
 
-    return handleResponse<{ fileUrl: string; mimeType: string }>(response);
+    return handleResponse<{ fileKey: string; mimeType: string }>(response);
   },
   async getTransactions(
     page = 1,
@@ -535,6 +537,29 @@ export const api = {
       headers: getAuthHeaders(),
     });
     return handleResponse<BankStatement>(response);
+  },
+
+  // Summary endpoints
+  async getWeeklyTotals(month?: string): Promise<WeeklyTotal[]> {
+    const url = month 
+      ? `${API_BASE_URL}/api/v1/summary/weekly-totals?month=${month}`
+      : `${API_BASE_URL}/api/v1/summary/weekly-totals`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<WeeklyTotal[]>(response);
+  },
+
+  async getCurrentMonthSummary(month?: string): Promise<CurrentMonthSummary> {
+    const url = month 
+      ? `${API_BASE_URL}/api/v1/summary/current-month?month=${month}`
+      : `${API_BASE_URL}/api/v1/summary/current-month`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<CurrentMonthSummary>(response);
   },
 };
 

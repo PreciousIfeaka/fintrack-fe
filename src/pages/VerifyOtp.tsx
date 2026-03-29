@@ -88,7 +88,7 @@ export default function VerifyOtp() {
 
       toast({
         title: 'Email verified',
-        description: lastApiMessage || 'Welcome to FinTrack!',
+        description: lastApiMessage || 'Welcome to FinTrac!',
       });
 
       navigate('/');

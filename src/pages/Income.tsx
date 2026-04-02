@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { api, ApiError, lastApiMessage } from '@/lib/api';
 import { Currency, CURRENCY_LOCALE_MAP, Income } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Plus,
   Pencil,
@@ -64,6 +65,8 @@ export default function IncomePage() {
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [deletingIncome, setDeletingIncome] = useState<Income | null>(null);
   const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Form state
@@ -182,6 +185,39 @@ export default function IncomePage() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      setSubmitting(true);
+      await api.deleteSelectedIncomes(selectedIds);
+      toast({ title: 'Success', description: lastApiMessage || 'Incomes deleted successfully' });
+      setBulkDeleteDialogOpen(false);
+      setSelectedIds([]);
+      fetchIncomes();
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredIncomes.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredIncomes.map(i => i.id));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
   const handleRowClick = (income: Income) => {
     setViewingIncome(income);
     setDetailsDialogOpen(true);
@@ -229,14 +265,29 @@ export default function IncomePage() {
               className="pl-8 w-[180px]"
             />
           </div>
-          <Button variant="outline" size="icon" onClick={fetchIncomes}>
+          <Button variant="outline" size="icon" onClick={() => {
+            fetchIncomes();
+            setSelectedIds([]);
+          }}>
             <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
-        <Button onClick={openCreateDialog} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Income
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <Button 
+              variant="destructive" 
+              onClick={() => setBulkDeleteDialogOpen(true)}
+              className="gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Selected ({selectedIds.length})
+            </Button>
+          )}
+          <Button onClick={openCreateDialog} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add Income
+          </Button>
+        </div>
       </div>
 
       {/* Total Income Card */}
@@ -274,6 +325,13 @@ export default function IncomePage() {
               <table className="w-full">
                 <thead className="bg-muted/50 border-b border-border">
                   <tr>
+                    <th className="px-4 py-3 text-center w-[50px]">
+                      <Checkbox 
+                        checked={filteredIncomes.length > 0 && selectedIds.length === filteredIncomes.length}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all"
+                      />
+                    </th>
                     <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground">Source</th>
                     <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground">Amount</th>
                     <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground hidden sm:table-cell">Date</th>
@@ -286,9 +344,16 @@ export default function IncomePage() {
                   {filteredIncomes.map((income) => (
                     <tr
                       key={income.id}
-                      className="hover:bg-muted/30 transition-colors cursor-pointer"
+                      className={`hover:bg-muted/30 transition-colors cursor-pointer ${selectedIds.includes(income.id) ? 'bg-muted/50' : ''}`}
                       onClick={() => handleRowClick(income)}
                     >
+                      <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox 
+                          checked={selectedIds.includes(income.id)}
+                          onCheckedChange={() => toggleSelect(income.id)}
+                          aria-label={`Select income from ${income.source}`}
+                        />
+                      </td>
                       <td className="px-4 py-3 text-foreground font-medium text-center">{income.source}</td>
                       <td className="px-4 py-3 text-success font-semibold whitespace-nowrap text-center">{formatCurrency(income.amount)}</td>
                       <td className="px-4 py-3 text-muted-foreground text-sm hidden sm:table-cell whitespace-nowrap text-center">
@@ -489,6 +554,24 @@ export default function IncomePage() {
             <AlertDialogAction onClick={handleDelete} disabled={submitting}>
               {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Selected Incomes</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedIds.length} selected income records? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBulkDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={submitting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Delete Selected
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -27,6 +27,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   ChevronLeft,
   ChevronRight,
@@ -68,6 +69,8 @@ export function TransactionList({
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Edit form state
@@ -155,6 +158,36 @@ export function TransactionList({
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setIsSubmitting(true);
+    try {
+      await api.deleteSelectedTransactions(selectedIds);
+      toast({ title: 'Success', description: lastApiMessage || 'Transactions deleted successfully' });
+      setBulkDeleteDialogOpen(false);
+      setSelectedIds([]);
+      onRefresh();
+    } catch {
+      toast({ title: 'Error', description: 'Failed to delete transactions', variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === transactions.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(transactions.map(t => t.id));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -165,10 +198,22 @@ export function TransactionList({
 
   return (
     <div className="space-y-4">
-      {/* Balance Summary */}
-      <div className="bg-card border border-border rounded-xl p-4">
-        <p className="text-sm text-muted-foreground">Current Balance</p>
-        <p className="text-2xl font-bold text-primary">{formatCurrency(balance)}</p>
+      {/* Balance Summary & Bulk Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border border-border rounded-xl p-4">
+        <div>
+          <p className="text-sm text-muted-foreground">Current Balance</p>
+          <p className="text-2xl font-bold text-primary">{formatCurrency(balance)}</p>
+        </div>
+        {selectedIds.length > 0 && (
+          <Button 
+            variant="destructive" 
+            onClick={() => setBulkDeleteDialogOpen(true)}
+            className="gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete Selected ({selectedIds.length})
+          </Button>
+        )}
       </div>
 
       {/* Transactions Table */}
@@ -182,6 +227,12 @@ export function TransactionList({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px] text-center">
+                    <Checkbox 
+                      checked={transactions.length > 0 && selectedIds.length === transactions.length}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead className="text-center">Date</TableHead>
                   <TableHead className="text-center">Amount</TableHead>
                   <TableHead className="text-center">Type</TableHead>
@@ -191,7 +242,17 @@ export function TransactionList({
               </TableHeader>
               <TableBody>
                 {transactions.map((transaction) => (
-                  <TableRow key={transaction.id} className="cursor-pointer hover:bg-muted/30" onClick={() => handleView(transaction)}>
+                  <TableRow 
+                    key={transaction.id} 
+                    className={`cursor-pointer hover:bg-muted/30 ${selectedIds.includes(transaction.id) ? 'bg-muted/50' : ''}`} 
+                    onClick={() => handleView(transaction)}
+                  >
+                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox 
+                        checked={selectedIds.includes(transaction.id)}
+                        onCheckedChange={() => toggleSelect(transaction.id)}
+                      />
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-sm whitespace-nowrap text-center">
                       {formatDate(transaction.transactionDateTime || transaction.createdAt)}
                     </TableCell>
@@ -365,6 +426,24 @@ export function TransactionList({
             <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Bulk Delete Dialog */}
+      <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Selected Transactions</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground">
+            Are you sure you want to delete {selectedIds.length} selected transactions? This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleBulkDelete} disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Delete Selected
             </Button>
           </DialogFooter>
         </DialogContent>

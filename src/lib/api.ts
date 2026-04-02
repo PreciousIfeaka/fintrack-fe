@@ -231,6 +231,15 @@ export const api = {
     return handleResponse<void>(response);
   },
 
+  async deleteSelectedBudgets(ids: string[]): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/budgets/selected`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ ids }),
+    });
+    return handleResponse<void>(response);
+  },
+
   async getMonthlyBudgetStats(): Promise<MonthlyBudgetStats[]> {
     const response = await fetch(`${API_BASE_URL}/api/v1/budgets/monthly-totals`, {
       method: 'GET',
@@ -289,6 +298,15 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/api/v1/incomes/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
+    });
+    return handleResponse<void>(response);
+  },
+
+  async deleteSelectedIncomes(ids: string[]): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/incomes/selected`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ ids }),
     });
     return handleResponse<void>(response);
   },
@@ -352,6 +370,15 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/api/v1/expenses/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
+    });
+    return handleResponse<void>(response);
+  },
+
+  async deleteSelectedExpenses(ids: string[]): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/expenses/selected`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ ids }),
     });
     return handleResponse<void>(response);
   },
@@ -476,6 +503,15 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
+    });
+    return handleResponse<void>(response);
+  },
+
+  async deleteSelectedTransactions(ids: string[]): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/transactions/selected`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ ids }),
     });
     return handleResponse<void>(response);
   },

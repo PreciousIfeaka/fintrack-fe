@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { api, ApiError, lastApiMessage } from '@/lib/api';
 import { Budget, Currency, CURRENCY_LOCALE_MAP, EXPENSE_CATEGORIES, ExpenseCategory } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Plus,
   Pencil,
@@ -68,6 +69,8 @@ export default function Budgets() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [deletingBudget, setDeletingBudget] = useState<Budget | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Form state
@@ -164,6 +167,39 @@ export default function Budgets() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      setSubmitting(true);
+      await api.deleteSelectedBudgets(selectedIds);
+      toast({ title: 'Success', description: lastApiMessage || 'Budgets deleted successfully' });
+      setBulkDeleteDialogOpen(false);
+      setSelectedIds([]);
+      fetchBudgets();
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === budgets.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(budgets.map(b => b.id));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
   const getCategoryLabel = (cat: ExpenseCategory) => {
     return EXPENSE_CATEGORIES.find(c => c.value === cat)?.label || cat;
   };
@@ -193,14 +229,39 @@ export default function Budgets() {
               setPage(1);
             }}
           />
-          <Button variant="outline" size="icon" onClick={fetchBudgets}>
+          <Button variant="outline" size="icon" onClick={() => {
+            fetchBudgets();
+            setSelectedIds([]);
+          }}>
             <RefreshCw className="w-4 h-4" />
           </Button>
+          {budgets.length > 0 && (
+            <div className="flex items-center gap-2 px-2 py-1 bg-muted rounded-md text-xs font-medium">
+              <Checkbox 
+                checked={budgets.length > 0 && selectedIds.length === budgets.length}
+                onCheckedChange={toggleSelectAll}
+                id="select-all"
+              />
+              <Label htmlFor="select-all" className="cursor-pointer">Select All</Label>
+            </div>
+          )}
         </div>
-        <Button onClick={openCreateDialog} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Budget
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <Button 
+              variant="destructive" 
+              onClick={() => setBulkDeleteDialogOpen(true)}
+              className="gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Selected ({selectedIds.length})
+            </Button>
+          )}
+          <Button onClick={openCreateDialog} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add Budget
+          </Button>
+        </div>
       </div>
 
       {/* Total Budget Card */}
@@ -255,9 +316,16 @@ export default function Budgets() {
             {budgets.map((budget) => (
               <div
                 key={budget.id}
-                className="bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow"
+                className={`bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-all relative ${selectedIds.includes(budget.id) ? 'ring-2 ring-primary border-primary/50 bg-primary/5' : ''}`}
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="absolute top-4 right-4 z-10">
+                  <Checkbox 
+                    checked={selectedIds.includes(budget.id)}
+                    onCheckedChange={() => toggleSelect(budget.id)}
+                    aria-label={`Select budget for ${getCategoryLabel(budget.category)}`}
+                  />
+                </div>
+                <div className="flex items-start justify-between mb-3 pr-8">
                   <div>
                     <div className="text-sm font-medium text-muted-foreground">
                       {getCategoryLabel(budget.category)}
@@ -399,6 +467,24 @@ export default function Budgets() {
             <AlertDialogAction onClick={handleDelete} disabled={submitting}>
               {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Selected Budgets</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedIds.length} selected budget records? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBulkDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={submitting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Delete Selected
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

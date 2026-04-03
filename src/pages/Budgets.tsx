@@ -63,6 +63,7 @@ export default function Budgets() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [pageInput, setPageInput] = useState('1');
 
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -96,7 +97,17 @@ export default function Budgets() {
 
   useEffect(() => {
     fetchBudgets();
+    setPageInput(String(page));
   }, [page, selectedMonth]);
+
+  const handlePageJump = () => {
+    const p = parseInt(pageInput);
+    if (!isNaN(p) && p >= 1 && p <= totalPages) {
+      setPage(p);
+    } else {
+      setPageInput(String(page));
+    }
+  };
 
   const openCreateDialog = () => {
     setEditingBudget(null);
@@ -377,9 +388,17 @@ export default function Budgets() {
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="text-sm text-muted-foreground px-4">
-                Page {page} of {totalPages}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Page</span>
+                <Input
+                  className="w-12 h-8 px-1 text-center"
+                  value={pageInput}
+                  onChange={(e) => setPageInput(e.target.value)}
+                  onBlur={handlePageJump}
+                  onKeyDown={(e) => e.key === 'Enter' && handlePageJump()}
+                />
+                <span className="text-sm text-muted-foreground whitespace-nowrap">of {totalPages}</span>
+              </div>
               <Button
                 variant="outline"
                 size="icon"

@@ -72,6 +72,7 @@ export function TransactionList({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pageInput, setPageInput] = useState(String(page));
 
   // Edit form state
   const [editAmount, setEditAmount] = useState('');
@@ -80,6 +81,19 @@ export function TransactionList({
   const [editDateTime, setEditDateTime] = useState('');
 
   const totalPages = Math.ceil(total / limit);
+
+  useEffect(() => {
+    setPageInput(String(page));
+  }, [page]);
+
+  const handlePageJump = () => {
+    const p = parseInt(pageInput);
+    if (!isNaN(p) && p >= 1 && p <= totalPages) {
+      onPageChange(p);
+    } else {
+      setPageInput(String(page));
+    }
+  };
 
   const userCurrency = (user?.currency as Currency) ?? 'NGN';
   const locale = userCurrency == 'NGN'
@@ -306,9 +320,17 @@ export function TransactionList({
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="text-sm">
-                Page {page} of {totalPages}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Page</span>
+                <Input
+                  className="w-12 h-8 px-1 text-center"
+                  value={pageInput}
+                  onChange={(e) => setPageInput(e.target.value)}
+                  onBlur={handlePageJump}
+                  onKeyDown={(e) => e.key === 'Enter' && handlePageJump()}
+                />
+                <span className="text-sm text-muted-foreground whitespace-nowrap">of {totalPages}</span>
+              </div>
               <Button
                 variant="outline"
                 size="sm"

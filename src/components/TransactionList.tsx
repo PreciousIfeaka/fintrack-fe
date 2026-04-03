@@ -77,6 +77,7 @@ export function TransactionList({
   const [editAmount, setEditAmount] = useState('');
   const [editDirection, setEditDirection] = useState<TransactionDirection>('credit');
   const [editDescription, setEditDescription] = useState('');
+  const [editDateTime, setEditDateTime] = useState('');
 
   const totalPages = Math.ceil(total / limit);
 
@@ -116,6 +117,7 @@ export function TransactionList({
     setEditAmount(String(transaction.amount));
     setEditDirection(transaction.direction);
     setEditDescription(transaction.description);
+    setEditDateTime(transaction.transactionDateTime ? transaction.transactionDateTime.slice(0, 16) : '');
     setEditDialogOpen(true);
   };
 
@@ -127,6 +129,7 @@ export function TransactionList({
         amount: Number(editAmount),
         direction: editDirection,
         description: editDescription,
+        transactionDateTime: editDateTime || undefined,
       });
       toast({ title: 'Success', description: lastApiMessage || 'Transaction updated successfully' });
       setEditDialogOpen(false);
@@ -399,6 +402,15 @@ export function TransactionList({
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
                 placeholder="Enter description"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-date">Transaction Date & Time</Label>
+              <Input
+                id="edit-date"
+                type="datetime-local"
+                value={editDateTime}
+                onChange={(e) => setEditDateTime(e.target.value)}
               />
             </div>
           </div>

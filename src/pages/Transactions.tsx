@@ -21,7 +21,7 @@ import { Filter, X, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Transactions() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -47,10 +47,10 @@ export default function Transactions() {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isLoading, isAuthenticated, navigate]);
 
   const fetchTransactions = async () => {
     setLoading(true);
@@ -120,7 +120,7 @@ export default function Transactions() {
 
   const hasActiveFilters = monthFilter || directionFilter !== 'all';
 
-  if (!isAuthenticated) return null;
+  if (isLoading || !isAuthenticated) return null;
 
   return (
     <DashboardLayout

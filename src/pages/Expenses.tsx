@@ -48,6 +48,7 @@ import {
 } from '@/components/ui/alert-dialogue';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Expenses() {
   const { toast } = useToast();
@@ -320,8 +321,18 @@ export default function Expenses() {
 
       {/* Expenses List */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="bg-card border border-border rounded-xl p-4 space-y-4 w-full">
+          <div className="flex items-center justify-between px-2">
+            <Skeleton className="h-8 w-1/4" />
+            <Skeleton className="h-8 w-1/6" />
+          </div>
+          <div className="space-y-3 mt-4">
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
+          </div>
         </div>
       ) : expenses.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">

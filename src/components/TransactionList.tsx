@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Currency, Transaction, TransactionDirection } from '@/lib/types';
 import { api, lastApiMessage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -222,8 +222,8 @@ export function TransactionList({
           <p className="text-2xl font-bold text-primary">{formatCurrency(balance)}</p>
         </div>
         {selectedIds.length > 0 && (
-          <Button 
-            variant="destructive" 
+          <Button
+            variant="destructive"
             onClick={() => setBulkDeleteDialogOpen(true)}
             className="gap-2"
           >
@@ -245,7 +245,7 @@ export function TransactionList({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px] text-center">
-                    <Checkbox 
+                    <Checkbox
                       checked={transactions.length > 0 && selectedIds.length === transactions.length}
                       onCheckedChange={toggleSelectAll}
                     />
@@ -259,13 +259,13 @@ export function TransactionList({
               </TableHeader>
               <TableBody>
                 {transactions.map((transaction) => (
-                  <TableRow 
-                    key={transaction.id} 
-                    className={`cursor-pointer hover:bg-muted/30 ${selectedIds.includes(transaction.id) ? 'bg-muted/50' : ''}`} 
+                  <TableRow
+                    key={transaction.id}
+                    className={`cursor-pointer hover:bg-muted/30 ${selectedIds.includes(transaction.id) ? 'bg-muted/50' : ''}`}
                     onClick={() => handleView(transaction)}
                   >
                     <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                      <Checkbox 
+                      <Checkbox
                         checked={selectedIds.includes(transaction.id)}
                         onCheckedChange={() => toggleSelect(transaction.id)}
                       />

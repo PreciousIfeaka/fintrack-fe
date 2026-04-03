@@ -1,0 +1,60 @@
+﻿
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\components\TransactionList.tsx
+  298:113  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\components\ui\badge.tsx
+  29:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\components\ui\button.tsx
+  47:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\components\ui\command.tsx
+  24:11  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\components\ui\form.tsx
+  129:10  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\components\ui\navigation-menu.tsx
+  111:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\components\ui\sidebar.tsx
+  636:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\components\ui\sonner.tsx
+  27:19  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\components\ui\textarea.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\components\ui\toggle.tsx
+  37:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\contexts\AuthContext.tsx
+  71:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\contexts\ThemeContext.tsx
+  42:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\pages\BankStatements.tsx
+  97:6  warning  React Hook useEffect has a missing dependency: 'fetchStatements'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\pages\Budgets.tsx
+  105:6  warning  React Hook useEffect has a missing dependency: 'fetchBudgets'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\pages\Dashboard.tsx
+  43:6  warning  React Hook useEffect has a missing dependency: 'fetchStats'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\pages\Expenses.tsx
+  108:6  warning  React Hook useEffect has a missing dependency: 'fetchExpenses'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\pages\Income.tsx
+  101:6  warning  React Hook useEffect has a missing dependency: 'fetchIncomes'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\src\pages\Transactions.tsx
+  92:6  warning  React Hook useEffect has a missing dependency: 'fetchTransactions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\DELL\Desktop\Spring projects\fintrack_p\fintrack\tailwind.config.ts
+  105:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+Γ£û 19 problems (4 errors, 15 warnings)
+

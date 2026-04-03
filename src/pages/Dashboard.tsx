@@ -8,6 +8,7 @@ import { api } from '@/lib/api';
 import { Currency, CurrentMonthSummary, WeeklyTotal } from '@/lib/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, AreaChart, Area } from 'recharts';
 import { MonthPicker } from '@/components/ui/month-picker';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -62,42 +63,42 @@ export default function Dashboard() {
 
         {/* Hero Section */}
         <main className="flex-1 flex flex-col items-center justify-center text-center px-4 relative z-10 w-full max-w-6xl mx-auto pt-16 pb-24">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8 animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8 animate-fade-in">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
             v2.0 New Generation Finance
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 animate-fade-in leading-[1.1]" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 animate-fade-in leading-[1.1]">
             Master your money with <br className="hidden md:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-accent">complete clarity.</span>
           </h1>
           
-          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl animate-fade-in leading-relaxed" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl animate-fade-in leading-relaxed">
             Track your income, manage expenses, and set powerful budgets. All your finances unified in one beautiful, intelligent dashboard.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in w-full sm:w-auto" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
-            <Button onClick={() => navigate('/register')} size="lg" className="h-14 px-8 text-base shadow-xl shadow-primary/25 hover:scale-105 transition-all duration-300 gap-2">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in w-full sm:w-auto">
+            <Button onClick={() => navigate('/register')} size="lg" className="h-14 px-8 text-base shadow-elevation-2 hover:shadow-elevation-3 hover:scale-105 transition-all duration-200 gap-2">
               Start for free <ArrowRight className="w-4 h-4" />
             </Button>
-            <Button onClick={() => navigate('/login')} variant="outline" size="lg" className="h-14 px-8 text-base bg-background/50 backdrop-blur-md hover:bg-accent/50 transition-all duration-300">
+            <Button onClick={() => navigate('/login')} variant="outline" size="lg" className="h-14 px-8 text-base bg-background/50 backdrop-blur-md hover:bg-accent/50 transition-all duration-200">
               Go to Dashboard
             </Button>
           </div>
 
           {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-32 animate-fade-in" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-32 animate-fade-in">
             {[
               { title: 'Lightning Fast', icon: Zap, desc: 'Add transactions in seconds with our optimized and responsive UI.' },
               { title: 'Visual Insights', icon: TrendingUp, desc: 'Beautiful charts help you understand where exactly your money goes.' },
               { title: 'Bank-grade Security', icon: ShieldCheck, desc: 'Your financial data is completely secure, encrypted, and safe at all times.' },
               { title: 'AI Analysis', icon: Cpu, desc: 'Automatically analyse bank statements and smartly categorize transactions using secure AI.' },
             ].map((f, i) => (
-              <div key={i} className="glass-effect rounded-2xl p-8 text-left hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 group border border-border/50">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-500 shadow-inner">
+              <div key={i} className="glass-effect rounded-2xl p-8 text-left hover:-translate-y-2 hover:shadow-elevation-2 transition-all duration-200 group border border-border/50">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-200 shadow-inner">
                   <f.icon className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{f.title}</h3>
@@ -137,10 +138,22 @@ export default function Dashboard() {
       description={`Viewing financial data for ${formattedMonth}.`}
     >
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4 animate-fade-in">
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
-          <p className="text-muted-foreground font-medium">Loading your financial data...</p>
+        <div className="space-y-8 animate-fade-in w-full">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-8">
+             <Skeleton className="h-11 w-44 rounded-xl" />
+             <Skeleton className="hidden lg:block h-8 w-40 rounded-full" />
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+             <Skeleton className="h-[188px] w-full rounded-2xl" />
+             <Skeleton className="h-[188px] w-full rounded-2xl" />
+             <Skeleton className="h-[188px] w-full rounded-2xl" />
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
+             <Skeleton className="h-[400px] w-full rounded-2xl" />
+             <Skeleton className="h-[400px] w-full rounded-2xl" />
+          </div>
         </div>
+
       ) : (
         <div className="space-y-8 animate-fade-in">
           {/* Controls */}

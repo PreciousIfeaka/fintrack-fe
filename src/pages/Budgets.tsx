@@ -48,6 +48,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialogue';
 import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Budgets() {
   const navigate = useNavigate();
@@ -308,8 +309,10 @@ export default function Budgets() {
 
       {/* Budgets List */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 w-full">
+          <Skeleton className="h-[124px] w-full rounded-xl" />
+          <Skeleton className="h-[124px] w-full rounded-xl" />
+          <Skeleton className="h-[124px] w-full rounded-xl" />
         </div>
       ) : budgets.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">

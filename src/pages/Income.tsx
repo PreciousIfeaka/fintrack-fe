@@ -58,6 +58,7 @@ export default function IncomePage() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [filterSource, setFilterSource] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [pageInput, setPageInput] = useState('1');
 
   // Dialog states
@@ -108,13 +109,15 @@ export default function IncomePage() {
     }
   };
 
-  // Frontend source filter
+  // Frontend filters
   const filteredIncomes = useMemo(() => {
-    if (!filterSource.trim()) return incomes;
-    return incomes.filter(i =>
-      i.source.toLowerCase().includes(filterSource.toLowerCase())
-    );
-  }, [incomes, filterSource]);
+    if (!filterSource.trim() && !searchTerm.trim()) return incomes;
+    return incomes.filter(i => {
+      const matchSource = !filterSource.trim() || i.source.toLowerCase().includes(filterSource.toLowerCase());
+      const matchDesc = !searchTerm.trim() || (i.note && i.note.toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchSource && matchDesc;
+    });
+  }, [incomes, filterSource, searchTerm]);
 
   const openCreateDialog = () => {
     setEditingIncome(null);
@@ -269,12 +272,22 @@ export default function IncomePage() {
             }}
           />
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Filter by source..."
               value={filterSource}
               onChange={(e) => setFilterSource(e.target.value)}
-              className="pl-8 w-[180px]"
+              className="pl-9 w-[180px]"
+            />
+          </div>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search description..."
+              className="pl-9 w-full sm:w-[200px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <Button variant="outline" size="icon" onClick={() => {
@@ -331,9 +344,9 @@ export default function IncomePage() {
           <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">No income records found</h3>
           <p className="text-muted-foreground mb-4">
-            {filterSource ? 'No records match your filter.' : 'Start tracking your income by adding your first entry.'}
+            {(filterSource || searchTerm) ? 'No records match your filter.' : 'Start tracking your income by adding your first entry.'}
           </p>
-          {!filterSource && (
+          {(!filterSource && !searchTerm) && (
             <Button onClick={openCreateDialog} className="gap-2">
               <Plus className="w-4 h-4" />
               Add Income

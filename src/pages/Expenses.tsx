@@ -18,7 +18,8 @@ import {
   AlertCircle,
   RefreshCw,
   Loader2,
-  TrendingDown
+  TrendingDown,
+  Search
 } from 'lucide-react';
 import {
   Dialog,
@@ -65,6 +66,11 @@ export default function Expenses() {
   });
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [pageInput, setPageInput] = useState('1');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredExpenses = expenses.filter(expense => 
+    !searchTerm || (expense.note && expense.note.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -285,6 +291,16 @@ export default function Expenses() {
               ))}
             </SelectContent>
           </Select>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search description..."
+              className="pl-9 w-full sm:w-[200px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           <Button variant="outline" size="icon" onClick={() => {
             fetchExpenses();
             setSelectedIds([]);
@@ -334,7 +350,7 @@ export default function Expenses() {
             <Skeleton className="h-12 w-full rounded-md" />
           </div>
         </div>
-      ) : expenses.length === 0 ? (
+      ) : filteredExpenses.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">No expenses found</h3>
@@ -353,7 +369,7 @@ export default function Expenses() {
                   <tr>
                     <th className="px-4 py-3 text-center w-[50px]">
                       <Checkbox 
-                        checked={expenses.length > 0 && selectedIds.length === expenses.length}
+                        checked={filteredExpenses.length > 0 && selectedIds.length === filteredExpenses.length}
                         onCheckedChange={toggleSelectAll}
                         aria-label="Select all"
                       />
@@ -367,7 +383,7 @@ export default function Expenses() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {expenses.map((expense) => (
+                  {filteredExpenses.map((expense) => (
                     <tr
                       key={expense.id}
                       className={`hover:bg-muted/30 transition-colors cursor-pointer ${selectedIds.includes(expense.id) ? 'bg-muted/50' : ''}`}

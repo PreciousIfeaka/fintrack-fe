@@ -294,3 +294,14 @@ export interface CurrentMonthSummary {
   budgetPercentageChange: number;
 }
 
+export interface ExpenseByCategory {
+  category: ExpenseCategory;
+  total: number;
+}
+
+export interface BudgetByCategory {
+  category: ExpenseCategory;
+  total: number;
+  isExceeded: boolean;
+}
+

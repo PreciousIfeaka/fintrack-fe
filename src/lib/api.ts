@@ -28,6 +28,8 @@ import {
   PagedBankStatementResponse,
   WeeklyTotal,
   CurrentMonthSummary,
+  ExpenseByCategory,
+  BudgetByCategory,
 } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -247,6 +249,17 @@ export const api = {
     });
     return handleResponse<MonthlyBudgetStats[]>(response);
   },
+  async getBudgetsByCategory(month?: string, year?: number): Promise<BudgetByCategory[]> {
+    const params = new URLSearchParams();
+    if (month) params.append('month', month);
+    if (year) params.append('year', String(year));
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/budgets/by-category?${params}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<BudgetByCategory[]>(response);
+  },
 
   // Income endpoints
   async createIncome(data: CreateIncomeRequest): Promise<Income> {
@@ -317,6 +330,17 @@ export const api = {
       headers: getAuthHeaders(),
     });
     return handleResponse<MonthlyIncomeStats[]>(response);
+  },
+  async getIncomesForChart(month?: string, year?: number): Promise<Income[]> {
+    const params = new URLSearchParams();
+    if (month) params.append('month', month);
+    if (year) params.append('year', String(year));
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/incomes/chart?${params}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<Income[]>(response);
   },
 
   // Expense endpoints
@@ -389,6 +413,17 @@ export const api = {
       headers: getAuthHeaders(),
     });
     return handleResponse<MonthlyExpenseStats[]>(response);
+  },
+  async getExpensesByCategory(month?: string, year?: number): Promise<ExpenseByCategory[]> {
+    const params = new URLSearchParams();
+    if (month) params.append('month', month);
+    if (year) params.append('year', String(year));
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/expenses/by-category?${params}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<ExpenseByCategory[]>(response);
   },
 
   // User endpoints

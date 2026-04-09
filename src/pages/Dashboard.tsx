@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Wallet, TrendingUp, TrendingDown, PiggyBank, Loader2, ArrowRight, ShieldCheck, Zap, Cpu, Calendar, RefreshCw } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, PiggyBank, ArrowRight, ShieldCheck, Zap, Cpu, Calendar, RefreshCw } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Currency, CurrentMonthSummary, WeeklyTotal } from '@/lib/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, AreaChart, Area } from 'recharts';
 import { MonthPicker } from '@/components/ui/month-picker';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CategoricalCharts } from '@/components/CategoricalCharts';
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -16,12 +17,13 @@ export default function Dashboard() {
   const [summary, setSummary] = useState<CurrentMonthSummary | null>(null);
   const [weeklyTotals, setWeeklyTotals] = useState<WeeklyTotal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chartViewMode, setChartViewMode] = useState<'month' | 'year'>('month');
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
       const [summaryData, weeklyData] = await Promise.all([
@@ -31,13 +33,13 @@ export default function Dashboard() {
       setSummary(summaryData);
       setWeeklyTotals(weeklyData);
     } catch { /* ignore */ } finally { setLoading(false); }
-  };
+  }, [selectedMonth]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchStats();
     }
-  }, [isAuthenticated, selectedMonth]);
+  }, [isAuthenticated, fetchStats]);
 
   if (!isAuthenticated) {
     return (
@@ -132,6 +134,9 @@ export default function Dashboard() {
   const displayDate = new Date(y, m - 1);
   const formattedMonth = displayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
+  const chartMonth = chartViewMode === 'month' ? selectedMonth : undefined;
+  const chartYear = chartViewMode === 'year' ? y : undefined;
+
   return (
     <DashboardLayout 
       title={`Welcome back, ${user?.name?.split(' ')[0]}!`} 
@@ -158,7 +163,7 @@ export default function Dashboard() {
         <div className="space-y-8 animate-fade-in">
           {/* Controls */}
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-xl border border-border/50 backdrop-blur-md shadow-inner">
                 <MonthPicker
                   value={selectedMonth}
@@ -274,6 +279,49 @@ export default function Dashboard() {
                </div>
             </div>
           </div>
+
+          {/* Categorical Breakdown Header */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4">
+            <div>
+              <h3 className="text-lg font-bold tracking-tight">Category Breakdown</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {chartViewMode === 'month' ? `Distribution for ${formattedMonth}` : `Distribution for ${y}`}
+              </p>
+            </div>
+            {/* Month / Year view toggle */}
+            <div className="flex items-center gap-1 p-1 bg-muted/40 rounded-xl border border-border/50">
+              <button
+                onClick={() => setChartViewMode('month')}
+                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  chartViewMode === 'month'
+                    ? 'bg-card shadow text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5 inline-block mr-1.5 -mt-0.5" />
+                Monthly
+              </button>
+              <button
+                onClick={() => setChartViewMode('year')}
+                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  chartViewMode === 'year'
+                    ? 'bg-card shadow text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5 inline-block mr-1.5 -mt-0.5" />
+                Yearly
+              </button>
+            </div>
+          </div>
+
+          {/* Categorical Donut Charts */}
+          <CategoricalCharts
+            month={chartMonth}
+            year={chartYear}
+            currency={userCurrency}
+            locale={locale}
+          />
         </div>
       )}
     </DashboardLayout>

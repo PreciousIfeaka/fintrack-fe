@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { api } from '@/lib/api';
 import { ExpenseByCategory, BudgetByCategory, Income, ExpenseCategory, EXPENSE_CATEGORIES } from '@/lib/types';
@@ -87,11 +87,11 @@ export function CategoricalCharts({ month, year, currency, locale }: Categorical
             <PieChart>
               <Pie
                 data={data}
-                cx="50%"
+                cx="38%"
                 cy="50%"
                 innerRadius={60}
-                outerRadius={80}
-                paddingAngle={5}
+                outerRadius={85}
+                paddingAngle={4}
                 dataKey={dataKey}
                 nameKey={nameKey}
                 stroke="none"
@@ -100,23 +100,33 @@ export function CategoricalCharts({ month, year, currency, locale }: Categorical
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  borderRadius: '12px', 
-                  borderColor: 'hsl(var(--border))', 
+              <Tooltip
+                contentStyle={{
+                  borderRadius: '12px',
+                  borderColor: 'hsl(var(--border))',
                   backgroundColor: 'hsl(var(--card))',
                   boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                 }}
                 formatter={(value: number) => [formatCurrency(value), 'Total']}
               />
-              <Legend 
-                verticalAlign="bottom" 
-                align="center"
+              <Legend
+                layout="vertical"
+                verticalAlign="middle"
+                align="right"
                 iconType="circle"
-                wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }}
+                iconSize={8}
+                wrapperStyle={{
+                  fontSize: '11px',
+                  lineHeight: '20px',
+                  maxWidth: '48%',
+                  paddingLeft: '12px',
+                  overflowY: 'auto',
+                  maxHeight: '200px',
+                }}
                 formatter={(value) => {
                   const category = EXPENSE_CATEGORIES.find(c => c.value === value);
-                  return category ? category.label : value;
+                  const label = category ? category.label : value;
+                  return <span style={{ color: 'hsl(var(--foreground))', opacity: 0.8 }}>{label}</span>;
                 }}
               />
             </PieChart>
